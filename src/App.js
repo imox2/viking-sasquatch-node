@@ -8,8 +8,25 @@ function App() {
   const [addAsFirstChild, setAddAsFirstChild] = React.useState(false);
   const [firstNames,setFirstNames] = React.useState(false);
   React.useEffect(() => {
-     const treeData =  [{ title: 'Peter Olofsson' }, { title: 'Karl Johansson' }];
-      setTreeData(treeData);
+     const fetchData = async () => {
+      // const data = await axios.get("localhost:3000/all");
+      let response = await fetch("http://localhost:3000/all", {
+
+    method: "GET",
+  });
+
+      const data = await response.json();
+
+    //   fetch("http://localhost:3000/all")
+    // .then(response => response.json())
+    // .then(jsondata => console.log(jsondata))
+      console.log("response:",response);
+      // const data = JSON.parse(response.json);
+      console.log("data:",data);
+
+      setTreeData(data);
+    }
+    fetchData();
       const firstNames = [
   'Abraham',
   'Adam',
@@ -63,6 +80,42 @@ function App() {
 setFirstNames(firstNames);
   }, []);
 
+  const changeTreeData = treeData => {
+    console.log("changeTreeData")
+    setTreeData(treeData);
+    setData();
+  }
+
+  const addMoreData = () => {
+    console.log("addMoreData");
+    const data = treeData.concat({
+      title: `${getRandomName()} ${getRandomName()}sson`,
+    })
+            setTreeData(data);
+            setData(data);
+  }
+
+   const setData = async (treeData) => {
+    let response = await fetch("http://localhost:3000/change", {
+      method: "POST",
+      body: JSON.stringify( {data: treeData}),
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      },
+    });
+    return response;
+  };
+
+  // const setData = async () => {
+  //     console.log("setData")
+  //     const response = await axios.post("localhost:3000/change", {data: treeData});
+  //     if(response.status) {
+  //       console.log("Success")
+  //     } else {
+  //       console.log("Failure")
+  //   }
+  //   }
+
 
   const getNodeKey = ({ treeIndex }) => treeIndex;
     const getRandomName = () =>
@@ -72,7 +125,7 @@ setFirstNames(firstNames);
         <div style={{ height: 300 }}>
           <SortableTree
             treeData={treeData}
-            onChange={treeData => setTreeData(treeData)}
+            onChange={(treeData) => changeTreeData(treeData)}
             generateNodeProps={({ node, path }) => ({
               buttons: [
                 <button
@@ -112,13 +165,7 @@ setFirstNames(firstNames);
         </div>
 
         <button
-          onClick={() =>
-            setTreeData(
-              treeData.concat({
-                title: `${getRandomName()} ${getRandomName()}sson`,
-              }),
-            )
-          }
+          onClick={() =>addMoreData()}
         >
           Add more
         </button>
