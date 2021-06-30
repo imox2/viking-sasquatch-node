@@ -1,3 +1,14 @@
+export function findTotalNodes(treeData) {
+  let nodes = 0;
+  treeData.forEach(data=> {
+    nodes++;
+    if(data.children) {
+      nodes = nodes + data.children.length
+    }
+  });
+  return nodes;
+}
+
 /**
  * Performs a depth-first traversal over all of the node descendants,
  * incrementing currentIndex by 1 for each
@@ -624,7 +635,7 @@ export function addNodeUnderParent({
   console.log("newNode:",newNode);
   console.log("parentKey:",parentKey);
   console.log("getNodeKey:",getNodeKey);
-  
+
   if (parentKey === null) {
     return addAsFirstChild
       ? {

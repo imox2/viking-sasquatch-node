@@ -1,20 +1,26 @@
 import React from 'react';
 import SortableTree from 'react-sortable-tree';
-import { addNodeUnderParent, removeNodeAtPath, changeNodeAtPath } from './utils/tree-data-utils';
+import { addNodeUnderParent, removeNodeAtPath, changeNodeAtPath , findTotalNodes} from './utils/tree-data-utils';
+import { getRandomNumber } from './utils/common';
 import 'react-sortable-tree/style.css'; // This only needs to be imported once in your app
  import { ToastContainer, toast } from 'react-toastify';
   import 'react-toastify/dist/ReactToastify.css';
+import socketIOClient from "socket.io-client";
+const ENDPOINT = "http://localhost:3000/";
 
 function App() {
   const [autoAddChildren, setAutoAddChildren] = React.useState(false);
   const [lowerBound, setLowerBound] = React.useState('');
   const [upperBound, setUpperBound] = React.useState('');
+  const [maxDepth, setMaxDepth] = React.useState(0);
   const [numberOfChildren,setNumberOfChildren] = React.useState('');
 
   const [treeData, setTreeData] = React.useState([]);
-  const [addAsFirstChild, setAddAsFirstChild] = React.useState(false);
-  const [firstNames,setFirstNames] = React.useState(false);
   React.useEffect(() => {
+    const socket = socketIOClient(ENDPOINT);
+    socket.on("tree_change", data => {
+      console.log("data tree_change:",data);
+    });
      const fetchData = async () => {
       // const data = await axios.get("localhost:3000/all");
       let response = await fetch("http://localhost:3000/tree", {
@@ -34,58 +40,8 @@ function App() {
        setTreeData(data);
       // setTreeData([{ name: 'Root' },]);
     }
+    setMaxDepth(3);
     fetchData();
-      const firstNames = [
-  'Abraham',
-  'Adam',
-  'Agnar',
-  'Albert',
-  'Albin',
-  'Albrecht',
-  'Alexander',
-  'Alfred',
-  'Alvar',
-  'Ander',
-  'Andrea',
-  'Arthur',
-  'Axel',
-  'Bengt',
-  'Bernhard',
-  'Carl',
-  'Daniel',
-  'Einar',
-  'Elmer',
-  'Eric',
-  'Erik',
-  'Gerhard',
-  'Gunnar',
-  'Gustaf',
-  'Harald',
-  'Herbert',
-  'Herman',
-  'Johan',
-  'John',
-  'Karl',
-  'Leif',
-  'Leonard',
-  'Martin',
-  'Matt',
-  'Mikael',
-  'Nikla',
-  'Norman',
-  'Oliver',
-  'Olof',
-  'Olvir',
-  'Otto',
-  'Patrik',
-  'Peter',
-  'Petter',
-  'Robert',
-  'Rupert',
-  'Sigurd',
-  'Simon',
-];
-setFirstNames(firstNames);
   }, []);
 
   const showToast = msg => {
@@ -105,26 +61,23 @@ progress: undefined,
     setData();
   }
 
-  const getRandomNumber = () => {
-    return Math.floor(Math.random() * (upperBound - lowerBound + 1)) + lowerBound;
-  }
 
   const addFactoryData = () => {
     console.log("addFactoryData",lowerBound,upperBound,numberOfChildren,(upperBound-lowerBound),treeData);
     let data = [];
     if(autoAddChildren) {
       // need bounds
-      if(!lowerBound || !upperBound ||!numberOfChildren) {
+      if(!lowerBound || !upperBound ||!numberOfChildren ||numberOfChildren==0) {
         showToast("Please add lower bound and upper bound of random numbers and number of children before adding factory")
-      } else if(upperBound>0 && lowerBound>0 && (upperBound-lowerBound)<15) {
-        showToast("upperBound and lowerBound numbers must be positive and difference should be over 15");
+      } else if(upperBound>0 && lowerBound>0 && (upperBound-lowerBound)<15 && numberOfChildren<=maxDepth) {
+        showToast(`upperBound and lowerBound numbers must be positive, difference should be over 15 and max number of children must be upto ${maxDepth}`);
       } else {
         // add factory
         // add factory
       let newData = treeData.concat({
       name: `Node ${treeData.length}`,
     })
-        const parentKey = newData.length - 1;
+        const parentKey = (findTotalNodes(newData)) - 1;
         for(let i=0; i<numberOfChildren;i++) {
            newData = addNodeUnderParent({
                         treeData: newData,
@@ -132,9 +85,8 @@ progress: undefined,
                         expandParent: true,
                         getNodeKey,
                         newNode: {
-                          name: `${getRandomNumber()}`,
+                          name: `${getRandomNumber(parseInt(lowerBound),parseInt(upperBound))}`,
                         },
-                        addAsFirstChild: addAsFirstChild,
                       }).treeData
         }
         data = newData;
@@ -179,8 +131,6 @@ progress: undefined,
 
 
   const getNodeKey = ({ treeIndex }) => treeIndex;
-    const getRandomName = () =>
-      firstNames[Math.floor(Math.random() * firstNames.length)];
     return (
       <div className="mx-28 mt-4 bg-white">
       <ToastContainer
@@ -201,13 +151,13 @@ pauseOnHover
       <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
         Lower bound of random number
       </label>
-      <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text" placeholder="lower bound" value={lowerBound} onChange={(event)=>setLowerBound(event.target.value)}/>
+      <input type="number" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" placeholder="lower bound" value={lowerBound} onChange={(event)=>setLowerBound(event.target.value)}/>
     </div>
     <div class=" flex flex-row mb-4">
       <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
         upper bound of random number
       </label>
-      <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text" placeholder="upper bound" value={upperBound} onChange={(event)=>setUpperBound(event.target.value)}/>
+      <input type="number" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username"  placeholder="upper bound" value={upperBound} onChange={(event)=>setUpperBound(event.target.value)}/>
     </div>
     </div>
      
@@ -215,7 +165,7 @@ pauseOnHover
       <label class="block text-gray-700 text-sm font-bold mb-2 mr-4 pr-2" for="username">
         number of childrens to add
       </label>
-      <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text" placeholder="number of children" value={numberOfChildren} onChange={(event)=>setNumberOfChildren(event.target.value)}/>
+      <input type="number" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" placeholder="number of children" value={numberOfChildren} onChange={(event)=>setNumberOfChildren(event.target.value)}/>
     </div>
 
        <div className="flex">
@@ -242,6 +192,7 @@ pauseOnHover
         <div style={{ height: 800}}>
           <SortableTree
             treeData={treeData}
+            maxDepth='2'
             onChange={(treeData) => changeTreeData(treeData)}
             generateNodeProps={({ node, path }) => ({
               title: (
@@ -250,13 +201,21 @@ pauseOnHover
                   value={node.name}
                   onChange={event => {
                     const name = event.target.value;
-                    setTreeData(changeNodeAtPath({
+                    
+                      const newTreeData = changeNodeAtPath({
                         treeData: treeData,
                         path,
                         getNodeKey,
                         newNode: { ...node, name },
-                      }));
+                      });
+                    setTreeData(newTreeData);
+                    if(name) {
+                    setData(newTreeData)
+                  } else {
+                    showToast("Node name cannot be empty. Not saved!");
+                    
                   }}
+                  }
                 />
               ),
               buttons: [
@@ -264,7 +223,9 @@ pauseOnHover
                 className="mr-4 px-5 py-1 rounded-xl text-sm font-medium text-indigo-600 bg-white outline-none focus:outline-none m-1 hover:m-0 focus:m-0 border border-indigo-600 hover:border-4 focus:border-4 hover:border-indigo-800 hover:text-indigo-800 focus:border-purple-200 active:border-grey-900 active:text-grey-900 transition-all"
                   onClick={() =>{
                     console.log(node,path);
-                    setTreeData(addNodeUnderParent({
+                    if(node.children) {
+                      if(node.children.length<maxDepth) {
+                      setTreeData(addNodeUnderParent({
                         treeData: treeData,
                         parentKey: path[path.length - 1],
                         expandParent: true,
@@ -272,9 +233,24 @@ pauseOnHover
                         newNode: {
                           name: `1`,
                         },
-                        addAsFirstChild: addAsFirstChild,
                       }).treeData
                     )
+                  } else {
+                    showToast(`Cant add more than ${maxDepth} children at one node`)
+                  }
+                    } else {
+                      setTreeData(addNodeUnderParent({
+                        treeData: treeData,
+                        parentKey: path[path.length - 1],
+                        expandParent: true,
+                        getNodeKey,
+                        newNode: {
+                          name: `1`,
+                        },
+                      }).treeData
+                    )
+                    }
+                    
                   }}
                 >
                   Add Child 
