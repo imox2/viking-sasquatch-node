@@ -127,7 +127,7 @@ function App() {
         treeIndex
     }) => treeIndex;
     return ( 
-        <div className="mx-28 mt-4 bg-white">
+        <div className="mx-4 sm:mx-20 md:mx-28 mt-4 bg-white">
    <ToastContainer
       position="bottom-left"
       autoClose={5000}
@@ -140,7 +140,7 @@ function App() {
       pauseOnHover
       />
    <div className="flex flex-col items-start text-center">
-      <div className=" flex flex-row mt-4 ">
+      <div className=" flex flex-col sm:flex-row mt-4 ">
          <div className=" flex flex-row mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" >
             Lower bound of random number
