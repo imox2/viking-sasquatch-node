@@ -22,19 +22,6 @@ export function findTotalNodes(treeData, nodes) {
   return nodes;
 }
 
-const search = (tree, target) => {
-  if (tree.id === target) {
-    return tree.label;
-  }
-  
-  for (const child of tree.child) {
-    const res = search(child, target);
-    
-    if (res) {
-      return res;
-    }
-  }
-};
 
 /**
  * Performs a depth-first traversal over all of the node descendants,
