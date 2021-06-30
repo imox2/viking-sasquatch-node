@@ -620,6 +620,11 @@ export function addNodeUnderParent({
   expandParent = false,
   addAsFirstChild = false,
 }) {
+  console.log("treeData:",treeData);
+  console.log("newNode:",newNode);
+  console.log("parentKey:",parentKey);
+  console.log("getNodeKey:",getNodeKey);
+  
   if (parentKey === null) {
     return addAsFirstChild
       ? {

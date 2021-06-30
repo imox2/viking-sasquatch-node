@@ -1,9 +1,16 @@
 import React from 'react';
 import SortableTree from 'react-sortable-tree';
-import { addNodeUnderParent, removeNodeAtPath } from './utils/tree-data-utils';
+import { addNodeUnderParent, removeNodeAtPath, changeNodeAtPath } from './utils/tree-data-utils';
 import 'react-sortable-tree/style.css'; // This only needs to be imported once in your app
+ import { ToastContainer, toast } from 'react-toastify';
+  import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
+  const [autoAddChildren, setAutoAddChildren] = React.useState(false);
+  const [lowerBound, setLowerBound] = React.useState('');
+  const [upperBound, setUpperBound] = React.useState('');
+  const [numberOfChildren,setNumberOfChildren] = React.useState('');
+
   const [treeData, setTreeData] = React.useState([]);
   const [addAsFirstChild, setAddAsFirstChild] = React.useState(false);
   const [firstNames,setFirstNames] = React.useState(false);
@@ -24,7 +31,8 @@ function App() {
       // const data = JSON.parse(response.json);
       console.log("data:",data);
 
-      setTreeData(data);
+       setTreeData(data);
+      // setTreeData([{ name: 'Root' },]);
     }
     fetchData();
       const firstNames = [
@@ -80,19 +88,72 @@ function App() {
 setFirstNames(firstNames);
   }, []);
 
+  const showToast = msg => {
+    toast(msg, {
+position: "bottom-left",
+autoClose: 5000,
+hideProgressBar: false,
+closeOnClick: true,
+pauseOnHover: true,
+draggable: true,
+progress: undefined,
+});
+  }
   const changeTreeData = treeData => {
     console.log("changeTreeData")
     setTreeData(treeData);
     setData();
   }
 
-  const addMoreData = () => {
-    console.log("addMoreData");
-    const data = treeData.concat({
-      title: `${getRandomName()} ${getRandomName()}sson`,
+  const getRandomNumber = () => {
+    return Math.floor(Math.random() * (upperBound - lowerBound + 1)) + lowerBound;
+  }
+
+  const addFactoryData = () => {
+    console.log("addFactoryData",lowerBound,upperBound,numberOfChildren,(upperBound-lowerBound),treeData);
+    let data = [];
+    if(autoAddChildren) {
+      // need bounds
+      if(!lowerBound || !upperBound ||!numberOfChildren) {
+        showToast("Please add lower bound and upper bound of random numbers and number of children before adding factory")
+      } else if(upperBound>0 && lowerBound>0 && (upperBound-lowerBound)<15) {
+        showToast("upperBound and lowerBound numbers must be positive and difference should be over 15");
+      } else {
+        // add factory
+        // add factory
+      let newData = treeData.concat({
+      name: `Node ${treeData.length}`,
     })
-            setTreeData(data);
+        const parentKey = newData.length - 1;
+        for(let i=0; i<numberOfChildren;i++) {
+           newData = addNodeUnderParent({
+                        treeData: newData,
+                        parentKey: parentKey,
+                        expandParent: true,
+                        getNodeKey,
+                        newNode: {
+                          name: `${getRandomNumber()}`,
+                        },
+                        addAsFirstChild: addAsFirstChild,
+                      }).treeData
+        }
+        data = newData;
+        setTreeData(data);
+                  
+      }
+      
+    } else {
+      // add factory
+      data = treeData.concat({
+      name: `Node ${treeData.length}`,
+    })
+    }
+    if(data.length>0) {
+      setTreeData(data);
             setData(data);
+    }
+
+            
   }
 
    const setData = async (treeData) => {
@@ -121,32 +182,105 @@ setFirstNames(firstNames);
     const getRandomName = () =>
       firstNames[Math.floor(Math.random() * firstNames.length)];
     return (
-      <div>
-        <div style={{ height: 300 }}>
+      <div className="mx-28 mt-4 bg-white">
+      <ToastContainer
+position="bottom-left"
+autoClose={5000}
+hideProgressBar={false}
+newestOnTop={false}
+closeOnClick
+rtl={false}
+pauseOnFocusLoss
+draggable
+pauseOnHover
+/>
+      <div className="flex flex-col items-start text-center">
+      
+                      <div class=" flex flex-row mt-4 ">
+                      <div class=" flex flex-row mb-4">
+      <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+        Lower bound of random number
+      </label>
+      <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text" placeholder="lower bound" value={lowerBound} onChange={(event)=>setLowerBound(event.target.value)}/>
+    </div>
+    <div class=" flex flex-row mb-4">
+      <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+        upper bound of random number
+      </label>
+      <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text" placeholder="upper bound" value={upperBound} onChange={(event)=>setUpperBound(event.target.value)}/>
+    </div>
+    </div>
+     
+         <div class=" flex flex-row mb-4">
+      <label class="block text-gray-700 text-sm font-bold mb-2 mr-4 pr-2" for="username">
+        number of childrens to add
+      </label>
+      <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text" placeholder="number of children" value={numberOfChildren} onChange={(event)=>setNumberOfChildren(event.target.value)}/>
+    </div>
+
+       <div className="flex">
+                        
+                        <div className="ml-3 text-sm">
+                          <label htmlFor="comments" className="font-medium text-gray-700">
+                            Automatically add childrens to factory
+                          </label>
+                        </div>
+                        <div className="flex items-center pl-4 h-5">
+                          <input
+                            id="childrens-check"
+                            name="childrens-check"
+                            type="checkbox"
+                            onChange={(event)=>setAutoAddChildren(event.target.value)} 
+                            checked={autoAddChildren}
+                            className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                          />
+                        </div>
+
+                      </div>
+                      <div class="mb-2 mt-2"><button onClick={() =>addFactoryData()} className="px-5 py-3 rounded-xl text-sm font-medium text-indigo-600 bg-white outline-none focus:outline-none m-1 hover:m-0 focus:m-0 border border-indigo-600 hover:border-4 focus:border-4 hover:border-indigo-800 hover:text-indigo-800 focus:border-purple-200 active:border-grey-900 active:text-grey-900 transition-all">Add Factory</button></div>
+        </div>
+        <div style={{ height: 800}}>
           <SortableTree
             treeData={treeData}
             onChange={(treeData) => changeTreeData(treeData)}
             generateNodeProps={({ node, path }) => ({
+              title: (
+                <input
+                  style={{ fontSize: '1.1rem' }}
+                  value={node.name}
+                  onChange={event => {
+                    const name = event.target.value;
+                    setTreeData(changeNodeAtPath({
+                        treeData: treeData,
+                        path,
+                        getNodeKey,
+                        newNode: { ...node, name },
+                      }));
+                  }}
+                />
+              ),
               buttons: [
                 <button
-                  onClick={() =>setTreeData(addNodeUnderParent({
+                className="mr-4 px-5 py-1 rounded-xl text-sm font-medium text-indigo-600 bg-white outline-none focus:outline-none m-1 hover:m-0 focus:m-0 border border-indigo-600 hover:border-4 focus:border-4 hover:border-indigo-800 hover:text-indigo-800 focus:border-purple-200 active:border-grey-900 active:text-grey-900 transition-all"
+                  onClick={() =>{
+                    console.log(node,path);
+                    setTreeData(addNodeUnderParent({
                         treeData: treeData,
                         parentKey: path[path.length - 1],
                         expandParent: true,
                         getNodeKey,
                         newNode: {
-                          title: `${getRandomName()} ${
-                            node.title.split(' ')[0]
-                          }sson`,
+                          name: `1`,
                         },
                         addAsFirstChild: addAsFirstChild,
                       }).treeData
                     )
-                  }
+                  }}
                 >
-                  Add Child
+                  Add Child 
                 </button>,
                 <button
+                className="mr-4 px-5 py-1 rounded-xl text-sm font-medium text-indigo-600 bg-white outline-none focus:outline-none m-1 hover:m-0 focus:m-0 border border-indigo-600 hover:border-4 focus:border-4 hover:border-indigo-800 hover:text-indigo-800 focus:border-purple-200 active:border-grey-900 active:text-grey-900 transition-all"
                   onClick={() =>
                     setTreeData(
                       removeNodeAtPath({
@@ -164,21 +298,7 @@ setFirstNames(firstNames);
           />
         </div>
 
-        <button
-          onClick={() =>addMoreData()}
-        >
-          Add more
-        </button>
-        <br />
-        <label htmlFor="addAsFirstChild">
-          Add new nodes at start
-          <input
-            name="addAsFirstChild"
-            type="checkbox"
-            checked={addAsFirstChild}
-            onChange={() => setAddAsFirstChild(!addAsFirstChild)}
-          />
-        </label>
+       
       </div>
     );
 }
