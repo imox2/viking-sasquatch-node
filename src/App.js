@@ -17,7 +17,7 @@ function App() {
   React.useEffect(() => {
      const fetchData = async () => {
       // const data = await axios.get("localhost:3000/all");
-      let response = await fetch("http://localhost:3000/all", {
+      let response = await fetch("http://localhost:3000/tree", {
 
     method: "GET",
   });
@@ -157,7 +157,7 @@ progress: undefined,
   }
 
    const setData = async (treeData) => {
-    let response = await fetch("http://localhost:3000/change", {
+    let response = await fetch("http://localhost:3000/tree", {
       method: "POST",
       body: JSON.stringify( {data: treeData}),
       headers: {
