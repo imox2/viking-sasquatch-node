@@ -1,3 +1,4 @@
+require('dotenv/config');
 // craco.config.js
 module.exports = {
   style: {
