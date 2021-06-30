@@ -1,13 +1,40 @@
-export function findTotalNodes(treeData) {
-  let nodes = 0;
+// export function findTotalNodes(treeData) {
+//   let nodes = 0;
+//   treeData.forEach(data=> {
+//     nodes++;
+//     if(data.children) {
+//       nodes = nodes + data.children.length
+//     }
+//   });
+//   return nodes;
+// }
+
+
+export function findTotalNodes(treeData, nodes) {
+  console.log("nodes:",nodes);
   treeData.forEach(data=> {
     nodes++;
     if(data.children) {
-      nodes = nodes + data.children.length
-    }
+      nodes = findTotalNodes(data.children, nodes) 
+    } 
   });
+  console.log("final nodes:",nodes);
   return nodes;
 }
+
+const search = (tree, target) => {
+  if (tree.id === target) {
+    return tree.label;
+  }
+  
+  for (const child of tree.child) {
+    const res = search(child, target);
+    
+    if (res) {
+      return res;
+    }
+  }
+};
 
 /**
  * Performs a depth-first traversal over all of the node descendants,
